@@ -3,35 +3,35 @@ import mongoose from "mongoose";
 import PostMessage from "../models/postMessages.js";
 
 export const getPosts = async (req, res) => {
-
   try {
+    const { page } = req.query;
+    const Limit = 20;
+    const start_index_of_page = (Number(page) - 1) * Limit;
+    const numberOfPosts = await PostMessage.countDocuments({});
+    const posts = await PostMessage.find()
+      .sort({ _id: -1 })
+      .limit(Limit)
+      .skip(start_index_of_page);
 
-    const {page}=req.query
-    const Limit=2
-    const start_index_of_page=(Number(page)-1)*Limit
-    const numberOfPosts=await PostMessage.countDocuments({})
-    const posts = await PostMessage.find().sort({_id:-1}).limit(Limit).skip(start_index_of_page)
-   
-    res.status(200).json({data:posts,currentPage:Number(page),numberOfPages:Math.ceil(numberOfPosts/Limit)});
+    res.status(200).json({
+      data: posts,
+      currentPage: Number(page),
+      numberOfPages: Math.ceil(numberOfPosts / Limit),
+    });
   } catch (error) {
     res.status(404).json({ message: error.message });
   }
 };
-
 
 export const getPost = async (req, res) => {
-
   try {
-
-    const {id}=req.params
-    const post = await PostMessage.findById(id)
-    res.status(200).json(post)
-  
+    const { id } = req.params;
+    const post = await PostMessage.findById(id);
+    res.status(200).json(post);
   } catch (error) {
     res.status(404).json({ message: error.message });
   }
 };
-
 
 //Query -> posts?search="nice" => get post from nice keyword
 //params -> posts/123 -> get post from 123 id
@@ -100,7 +100,7 @@ export const deletePost = async (req, res) => {
 
 export const likePost = async (req, res) => {
   //userId is  comming from middle-wear
-  
+
   if (!req.userId) {
     res.json({ message: "Unouthorized Person" });
   }
@@ -127,46 +127,32 @@ export const likePost = async (req, res) => {
   res.json(updatepost);
 };
 
-
-export const commentPost=async (req,res)=>{
-
+export const commentPost = async (req, res) => {
   try {
+    const { comment } = req.body;
+    const { id } = req.params;
 
-    const {comment}=req.body;
-    const {id}=req.params;
+    const post = await PostMessage.findById(id);
 
-    
-    const post=await PostMessage.findById(id);
-   
-    post.comments.push(comment)
- 
-    const updatePost=await PostMessage.findByIdAndUpdate(id,post,{new:true})
-   
-    res.json(updatePost)
+    post.comments.push(comment);
+
+    const updatePost = await PostMessage.findByIdAndUpdate(id, post, {
+      new: true,
+    });
+
+    res.json(updatePost);
   } catch (error) {
-    res.json(erroe)
+    res.json(erroe);
   }
+};
 
-}
-
-export const userPosts=async(req,res)=>{
+export const userPosts = async (req, res) => {
   try {
-
-    const {id}=req.params
-    const allPost=await PostMessage.find()
-    const userposts=allPost.filter((post)=>post.creator===String(id))
-    res.json(userposts)
-
+    const { id } = req.params;
+    const allPost = await PostMessage.find();
+    const userposts = allPost.filter((post) => post.creator === String(id));
+    res.json(userposts);
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
-}
-
-
-
-
-
-
-
-
-
+};
